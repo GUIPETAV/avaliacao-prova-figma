@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sistema de Avaliação — Prova de Figma | Competições Senac</title>
+<meta name="description" content="Sistema de avaliação da prova prática de prototipação no Figma das Competições Senac. Cadastro de competidores, ficha de 17 critérios e ranking com até 3 avaliadores." />
+<meta name="theme-color" content="#012762" />
+<style>
+  html, body { margin: 0; padding: 0; background: #E9EDF6; }
+  body { padding: 0; }
+  #app-root { border-radius: 0 !important; min-height: 100vh; }
+  @media print { #app-root .abas, #app-root .topo, #app-root .rodape { display: none !important; } }
+</style>
+</head>
+<body>
+<div id="app-root">
+<style>
+  #app-root {
+    --azul-escuro: #012762;
+    --azul: #2235A6;
+    --magenta: #F61168;
+    --ciano: #0081A5;
+    --verde: #7A9200;
+    --verde-claro: #AFD100;
+    --papel: #F4F6FB;
+    --linha: #D5DBEC;
+    --tinta: #16203A;
+    --suave: #5C6685;
+    font-family: Helvetica, Arial, system-ui, sans-serif;
+    color: var(--tinta);
+    line-height: 1.5;
+    background: var(--papel);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #app-root * { box-sizing: border-box; }
+  #app-root button { font-family: inherit; cursor: pointer; }
+  #app-root input, #app-root select, #app-root textarea { font-family: inherit; font-size: 14px; }
+
+  .topo { background: var(--azul-escuro); color: #fff; padding: 14px 22px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .marca { font-weight: bold; font-size: 17px; letter-spacing: .2px; }
+  .marca span { color: var(--magenta); }
+  .topo .quem { margin-left: auto; display: flex; align-items: center; gap: 10px; font-size: 13px; color: #B9C6E8; }
+  .topo .quem b { color: #fff; }
+  .btn-troca { background: transparent; border: 1px solid #47598F; color: #D4DEF5; padding: 5px 11px; border-radius: 6px; font-size: 12px; }
+  .btn-troca:hover { background: #10306E; }
+
+  .abas { display: flex; gap: 2px; background: var(--azul-escuro); padding: 0 16px; }
+  .abas button { background: transparent; border: 0; border-bottom: 3px solid transparent; color: #A9BADF; padding: 11px 16px; font-size: 14px; }
+  .abas button.on { color: #fff; border-bottom-color: var(--magenta); font-weight: bold; }
+  .abas button:hover { color: #fff; }
+
+  .tela { padding: 24px; max-width: 1080px; margin: 0 auto; }
+  h2.titulo { font-size: 21px; margin: 0 0 4px; color: var(--azul-escuro); }
+  p.sub { margin: 0 0 20px; color: var(--suave); font-size: 14px; max-width: 62ch; }
+
+  .cartao { background: #fff; border: 1px solid var(--linha); border-radius: 8px; padding: 18px; margin-bottom: 14px; }
+  .campo { display: block; margin-bottom: 12px; }
+  .campo span { display: block; font-size: 12px; color: var(--suave); margin-bottom: 4px; }
+  .campo input, .campo select, .campo textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; }
+  .campo input:focus, .campo textarea:focus, .campo select:focus { outline: 2px solid var(--azul); outline-offset: 1px; border-color: var(--azul); }
+  .linha-campos { display: flex; gap: 12px; flex-wrap: wrap; }
+  .linha-campos .campo { flex: 1 1 200px; }
+
+  .btn { background: var(--magenta); color: #fff; border: 0; padding: 10px 18px; border-radius: 6px; font-size: 14px; font-weight: bold; }
+  .btn:hover { background: #d20b56; }
+  .btn.sec { background: #fff; color: var(--azul); border: 1px solid var(--linha); font-weight: normal; }
+  .btn.sec:hover { border-color: var(--azul); }
+  .btn.mini { padding: 5px 10px; font-size: 12px; }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+
+  table.lista { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--linha); border-radius: 8px; overflow: hidden; }
+  table.lista th { background: var(--azul); color: #fff; text-align: left; font-size: 12px; padding: 9px 12px; font-weight: bold; }
+  table.lista td { padding: 9px 12px; border-top: 1px solid var(--linha); font-size: 14px; vertical-align: middle; }
+  table.lista tr:hover td { background: #FAFBFF; }
+
+  .vazio { text-align: center; padding: 34px 20px; color: var(--suave); border: 1px dashed var(--linha); border-radius: 8px; background: #fff; font-size: 14px; }
+
+  .criterio { display: grid; grid-template-columns: 46px 1fr 172px; gap: 14px; align-items: start; padding: 13px 0; border-top: 1px solid var(--linha); }
+  .criterio:first-of-type { border-top: 0; }
+  .cod { font-weight: bold; color: var(--azul); font-size: 13px; padding-top: 6px; }
+  .criterio h4 { margin: 0 0 2px; font-size: 15px; }
+  .criterio p { margin: 0; font-size: 12.5px; color: var(--suave); }
+  .notas { display: flex; gap: 6px; }
+  .notas button { flex: 1; border: 1px solid var(--linha); background: #fff; border-radius: 6px; padding: 9px 0; font-size: 13px; color: var(--suave); }
+  .notas button b { display: block; font-size: 17px; color: var(--tinta); }
+  .notas button.on { border-color: transparent; color: #fff; }
+  .notas button.on b { color: #fff; }
+  .notas button.on[data-n="0"] { background: #B00030; }
+  .notas button.on[data-n="1"] { background: var(--ciano); }
+  .notas button.on[data-n="2"] { background: var(--verde); }
+
+  .bloco-tit { display: flex; align-items: baseline; gap: 10px; margin: 22px 0 6px; }
+  .bloco-tit h3 { margin: 0; font-size: 16px; color: var(--azul-escuro); }
+  .bloco-tit em { font-style: normal; font-size: 12px; color: var(--suave); }
+
+  .barra-total { position: sticky; bottom: 0; background: var(--azul-escuro); color: #fff; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 18px; margin-top: 16px; flex-wrap: wrap; }
+  .barra-total .n { font-size: 30px; font-weight: bold; line-height: 1; }
+  .barra-total .n small { font-size: 14px; font-weight: normal; color: #9FB3DF; }
+  .barra-total .info { font-size: 12.5px; color: #B9C6E8; }
+  .barra-total .acoes { margin-left: auto; display: flex; gap: 8px; }
+
+  .pontos { display: inline-block; min-width: 52px; font-weight: bold; color: var(--azul-escuro); }
+  .medalha { display: inline-flex; width: 24px; height: 24px; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: bold; color: #fff; background: var(--suave); }
+  .medalha.p1 { background: var(--magenta); } .medalha.p2 { background: var(--azul); } .medalha.p3 { background: var(--ciano); }
+
+  .tag { display: inline-block; font-size: 11px; padding: 2px 7px; border-radius: 20px; background: #E9EDF9; color: var(--azul); margin-right: 4px; }
+  .tag.ok { background: #EDF6D8; color: #4E6100; }
+  .tag.no { background: #FBEAEF; background: #FBE9EE; color: #B00030; }
+
+  .aviso { background: #FFF8E1; border-left: 4px solid #E9B000; padding: 10px 14px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; }
+  .rodape { text-align: center; font-size: 12px; color: var(--suave); padding: 16px; }
+  .escala-legenda { font-size: 12.5px; color: var(--suave); margin: 0 0 14px; }
+  .escala-legenda b { color: var(--tinta); }
+  @media (max-width: 700px) {
+    .criterio { grid-template-columns: 34px 1fr; }
+    .criterio .notas { grid-column: 1 / -1; }
+  }
+</style>
+
+<div class="topo">
+  <div class="marca">Competições Senac <span>·</span> Prova de Figma</div>
+  <div class="quem" id="quem"></div>
+</div>
+<div class="abas" id="abas"></div>
+<div id="tela" class="tela"></div>
+<div class="rodape">Os dados ficam salvos neste navegador. Use <b>Exportar</b> em Resultados para guardar uma cópia.</div>
+</div>
+
+<script>
+(function () {
+  const CHAVE = 'prova-figma-senac-v1';
+
+  const CRITERIOS = [
+    { id:'A1', bloco:'A', peso:3, t:'Mostra o que está acontecendo', d:'Botão muda no hover, seção atual marcada no menu, plano selecionado diferente dos outros.' },
+    { id:'A2', bloco:'A', peso:3, t:'Fala a língua do usuário', d:'Texto sem jargão, ícones conhecidos, preço em R$ com periodicidade.' },
+    { id:'A3', bloco:'A', peso:3, t:'Deixa voltar atrás', d:'Menu do celular fecha, dá para voltar ao topo, dá para trocar o plano.' },
+    { id:'A4', bloco:'A', peso:3, t:'Mantém o padrão', d:'Botão igual em toda a página, celular com as mesmas cores e fontes, capas no mesmo estilo.' },
+    { id:'A5', bloco:'A', peso:3, t:'Evita erro do usuário', d:'Botão diz o que acontece, campo mostra o formato, plano recomendado em destaque.' },
+    { id:'A6', bloco:'A', peso:3, t:'Não exige decorar', d:'Menu sempre visível, botão com texto e não só ícone, seções com título.' },
+    { id:'A7', bloco:'A', peso:3, t:'Tem caminho curto', d:'Mais de um caminho até os planos, links do menu funcionam, botão logo no começo.' },
+    { id:'A8', bloco:'A', peso:3, t:'É limpa e organizada', d:'Uma ideia por seção, hierarquia clara, nada decorativo competindo com o botão.' },
+    { id:'A9', bloco:'A', peso:3, t:'Explica o erro', d:'Mensagem diz o problema e a solução, fica perto do campo. Sem estado de erro, nota máxima 1.' },
+    { id:'A10', bloco:'A', peso:3, t:'Oferece ajuda', d:'FAQ ou "como funciona", rodapé com contato, diferença entre os planos explicada.' },
+    { id:'B1', bloco:'B', peso:3, t:'Componentes', d:'1 = botão ou card como componente. 2 = os dois e reaproveitados no celular.' },
+    { id:'B2', bloco:'B', peso:3, t:'Estilos e logo', d:'2 = estilos de cor e texto aplicados, logo bem posicionada no topo e no rodapé.' },
+    { id:'B3', bloco:'B', peso:3, t:'Auto Layout', d:'2 = seções e cards com Auto Layout, celular derivado sem refazer tudo.' },
+    { id:'B4', bloco:'B', peso:3.5, t:'Protótipo funcionando', d:'Menu, botões e menu do celular ligados. 2 = as três ligações funcionam.' },
+    { id:'C1', bloco:'C', peso:3, t:'5 seções no computador', d:'0 = faltam 3 ou mais. 1 = falta 1 ou 2. 2 = todas com conteúdo de verdade.' },
+    { id:'C2', bloco:'C', peso:3, t:'5 seções no celular', d:'1 = fez, mas incompleto ou só redimensionado. 2 = adaptadas de verdade.' },
+    { id:'C3', bloco:'C', peso:1.5, t:'Prazo e organização', d:'2 = no prazo, links liberados, camadas e páginas nomeadas.' }
+  ];
+  const BLOCOS = {
+    A: { nome: 'Usabilidade — heurísticas de Nielsen', max: 60 },
+    B: { nome: 'Uso do Figma', max: 25 },
+    C: { nome: 'Entrega', max: 15 }
+  };
+  const ROTULOS = ['Não fez', 'Em parte', 'Fez'];
+
+  /* ---------- armazenamento ---------- */
+  const local = {
+    async get(k) { const v = localStorage.getItem(CHAVE + ':' + k); return v ? { value: v } : null; },
+    async set(k, v) { localStorage.setItem(CHAVE + ':' + k, v); return true; }
+  };
+  const remoto = (typeof window !== 'undefined' && window.storage) ? window.storage : null;
+
+  async function ler() {
+    if (remoto) {
+      try { const r = await remoto.get(CHAVE, true); if (r && r.value) return JSON.parse(r.value); } catch (e) {}
+    }
+    try { const r = await local.get('estado'); if (r) return JSON.parse(r.value); } catch (e) {}
+    return null;
+  }
+  async function gravar(obj) {
+    const txt = JSON.stringify(obj);
+    await local.set('estado', txt);
+    if (remoto) { try { await remoto.set(CHAVE, txt, true); } catch (e) {} }
+  }
+
+  /* ---------- estado ---------- */
+  let E = null;
+  let euId = localStorage.getItem(CHAVE + ':eu') || null;
+  let aba = 'competidores';
+  let editandoAluno = null;
+  let avaliandoAluno = null;
+  let rascunho = null;
+
+  const novoId = () => Math.random().toString(36).slice(2, 9);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const $ = s => document.querySelector('#app-root ' + s);
+
+  function eu() { return (E && E.avaliadores || []).find(a => a.id === euId) || null; }
+
+  /* ---------- cálculo ---------- */
+  function pontosDe(notas) {
+    if (!notas) return null;
+    let t = 0, respondidos = 0;
+    for (const c of CRITERIOS) {
+      const n = notas[c.id];
+      if (n === 0 || n === 1 || n === 2) { t += n * c.peso; respondidos++; }
+    }
+    return { total: Math.round(t * 10) / 10, respondidos };
+  }
+  function porBloco(notas) {
+    const out = {};
+    for (const b of Object.keys(BLOCOS)) {
+      out[b] = CRITERIOS.filter(c => c.bloco === b)
+        .reduce((s, c) => s + ((notas && (notas[c.id] || notas[c.id] === 0)) ? notas[c.id] * c.peso : 0), 0);
+    }
+    return out;
+  }
+  function resultado(aluno) {
+    const fichas = E.notas[aluno.id] || {};
+    const dos = Object.keys(fichas).filter(k => (E.avaliadores || []).some(a => a.id === k));
+    const parciais = dos.map(k => pontosDe(fichas[k])).filter(Boolean);
+    if (!parciais.length) return { avaliadores: 0, bruto: null, final: null, blocos: null };
+    let bruto = parciais.reduce((s, p) => s + p.total, 0) / parciais.length;
+    const blocosMedia = {};
+    for (const b of Object.keys(BLOCOS)) {
+      blocosMedia[b] = dos.reduce((s, k) => s + porBloco(fichas[k])[b], 0) / dos.length;
+    }
+    let final = bruto;
+    if (aluno.template) { final = final - blocosMedia.B; blocosMedia.B = 0; }
+    if (aluno.atraso) final -= 10;
+    if (aluno.template) final = Math.min(final, 50);
+    final = Math.max(0, Math.round(final * 10) / 10);
+    return { avaliadores: dos.length, bruto: Math.round(bruto * 10) / 10, final, blocos: blocosMedia, quem: dos };
+  }
+  function faixa(n) {
+    if (n >= 85) return ['Excelente', 'var(--verde)'];
+    if (n >= 70) return ['Bom', 'var(--ciano)'];
+    if (n >= 50) return ['Regular', 'var(--azul)'];
+    return ['Iniciando', '#B00030'];
+  }
+
+  /* ---------- telas ---------- */
+  function render() {
+    const tela = $('#tela'), abas = $('#abas'), quem = $('#quem');
+    if (!E) { tela.innerHTML = '<div class="vazio">Carregando…</div>'; return; }
+
+    if (!E.avaliadores.length) { abas.style.display = 'none'; quem.innerHTML = ''; return telaSetup(tela); }
+    if (!eu()) { abas.style.display = 'none'; quem.innerHTML = ''; return telaQuemSouEu(tela); }
+
+    abas.style.display = 'flex';
+    quem.innerHTML = 'Avaliando como <b>' + esc(eu().nome) + '</b> <button class="btn-troca" id="trocar">Trocar</button>';
+    $('#trocar').onclick = () => { localStorage.removeItem(CHAVE + ':eu'); euId = null; render(); };
+
+    const itens = [['competidores', 'Competidores'], ['avaliar', 'Avaliar'], ['resultados', 'Resultados'], ['ajustes', 'Ajustes']];
+    abas.innerHTML = itens.map(([k, n]) => '<button data-aba="' + k + '" class="' + (aba === k ? 'on' : '') + '">' + n + '</button>').join('');
+    abas.querySelectorAll('button').forEach(b => b.onclick = () => { aba = b.dataset.aba; avaliandoAluno = null; editandoAluno = null; render(); });
+
+    if (aba === 'competidores') telaCompetidores(tela);
+    else if (aba === 'avaliar') telaAvaliar(tela);
+    else if (aba === 'resultados') telaResultados(tela);
+    else telaAjustes(tela);
+  }
+
+  function telaSetup(tela) {
+    tela.innerHTML = `
+      <h2 class="titulo">Vamos começar</h2>
+      <p class="sub">Cadastre de 1 a 3 avaliadores. A nota final de cada competidor é a média de quem avaliar — funciona com um avaliador só.</p>
+      <div class="cartao">
+        <label class="campo"><span>Nome da prova</span><input id="s-titulo" value="Prova de prototipação — Figma" /></label>
+        <div class="linha-campos">
+          <label class="campo"><span>Avaliador 1 (obrigatório)</span><input id="s-a1" placeholder="Ex.: Guilherme Tavares" /></label>
+          <label class="campo"><span>Avaliador 2 (opcional)</span><input id="s-a2" placeholder="Deixe vazio se não houver" /></label>
+          <label class="campo"><span>Avaliador 3 (opcional)</span><input id="s-a3" placeholder="Deixe vazio se não houver" /></label>
+        </div>
+        <button class="btn" id="s-ok">Criar a prova</button>
+      </div>`;
+    $('#s-ok').onclick = async () => {
+      const nomes = ['s-a1', 's-a2', 's-a3'].map(i => $('#' + i).value.trim()).filter(Boolean);
+      if (!nomes.length) { $('#s-a1').focus(); return; }
+      E.titulo = $('#s-titulo').value.trim() || 'Prova de prototipação';
+      E.avaliadores = nomes.map(n => ({ id: novoId(), nome: n }));
+      await gravar(E); render();
+    };
+  }
+
+  function telaQuemSouEu(tela) {
+    tela.innerHTML = `
+      <h2 class="titulo">Quem está avaliando neste computador?</h2>
+      <p class="sub">Cada avaliador preenche a própria ficha. Você pode trocar a qualquer momento no topo da tela.</p>
+      <div class="cartao">${E.avaliadores.map(a =>
+        '<button class="btn sec" style="margin:4px 6px 4px 0" data-id="' + a.id + '">' + esc(a.nome) + '</button>').join('')}</div>`;
+    tela.querySelectorAll('button[data-id]').forEach(b => b.onclick = () => {
+      euId = b.dataset.id; localStorage.setItem(CHAVE + ':eu', euId); render();
+    });
+  }
+
+  function telaCompetidores(tela) {
+    const a = editandoAluno;
+    const form = `
+      <div class="cartao">
+        <div class="linha-campos">
+          <label class="campo"><span>Nome do competidor</span><input id="c-nome" value="${a ? esc(a.nome) : ''}" placeholder="Nome completo" /></label>
+          <label class="campo"><span>Turma</span><input id="c-turma" value="${a ? esc(a.turma) : ''}" placeholder="Ex.: CS 27" /></label>
+        </div>
+        <div class="linha-campos">
+          <label class="campo"><span>Nome do serviço criado</span><input id="c-servico" value="${a ? esc(a.servico) : ''}" placeholder="Ex.: PlayLab" /></label>
+          <label class="campo"><span>Tema</span><input id="c-tema" value="${a ? esc(a.tema) : ''}" placeholder="Ex.: anime dublado" /></label>
+        </div>
+        <div class="linha-campos">
+          <label class="campo"><span>Link do arquivo Figma</span><input id="c-arq" value="${a ? esc(a.arquivo) : ''}" placeholder="https://figma.com/..." /></label>
+          <label class="campo"><span>Link do protótipo</span><input id="c-proto" value="${a ? esc(a.proto) : ''}" placeholder="https://figma.com/proto/..." /></label>
+        </div>
+        <label class="campo" style="margin-bottom:6px"><span>Penalidades</span>
+          <span style="font-size:13px;color:var(--tinta)">
+            <label style="margin-right:16px"><input type="checkbox" id="c-atraso" ${a && a.atraso ? 'checked' : ''} /> Entregou fora do prazo (−10)</label>
+            <label><input type="checkbox" id="c-template" ${a && a.template ? 'checked' : ''} /> Usou template ou layout gerado por IA (zera o bloco B e limita a 50)</label>
+          </span>
+        </label>
+        <button class="btn" id="c-salvar">${a ? 'Salvar alterações' : 'Cadastrar competidor'}</button>
+        ${a ? '<button class="btn sec" id="c-cancelar" style="margin-left:8px">Cancelar</button>' : ''}
+      </div>`;
+
+    const linhas = E.alunos.map(al => {
+      const res = resultado(al);
+      const feitas = res.avaliadores;
+      return `<tr>
+        <td><b>${esc(al.nome)}</b><div style="font-size:12px;color:var(--suave)">${esc(al.turma || '')}${al.servico ? ' · ' + esc(al.servico) : ''}</div></td>
+        <td>${feitas ? '<span class="tag ok">' + feitas + ' de ' + E.avaliadores.length + ' avaliaram</span>' : '<span class="tag">ainda não avaliado</span>'}
+            ${al.atraso ? '<span class="tag no">atraso</span>' : ''}${al.template ? '<span class="tag no">template</span>' : ''}</td>
+        <td style="white-space:nowrap">
+          <button class="btn mini sec" data-av="${al.id}">Avaliar</button>
+          <button class="btn mini sec" data-ed="${al.id}">Editar</button>
+          <button class="btn mini sec" data-rm="${al.id}">Remover</button>
+        </td></tr>`;
+    }).join('');
+
+    tela.innerHTML = `
+      <h2 class="titulo">Competidores</h2>
+      <p class="sub">Cadastre quem vai fazer a prova. Qualquer avaliador pode cadastrar, e a lista é a mesma para todos.</p>
+      ${form}
+      ${E.alunos.length ? '<table class="lista"><tr><th>Competidor</th><th>Situação</th><th></th></tr>' + linhas + '</table>'
+        : '<div class="vazio">Nenhum competidor cadastrado ainda.</div>'}`;
+
+    $('#c-salvar').onclick = async () => {
+      const nome = $('#c-nome').value.trim();
+      if (!nome) { $('#c-nome').focus(); return; }
+      const dados = {
+        nome, turma: $('#c-turma').value.trim(), servico: $('#c-servico').value.trim(), tema: $('#c-tema').value.trim(),
+        arquivo: $('#c-arq').value.trim(), proto: $('#c-proto').value.trim(),
+        atraso: $('#c-atraso').checked, template: $('#c-template').checked
+      };
+      if (a) Object.assign(a, dados); else E.alunos.push(Object.assign({ id: novoId() }, dados));
+      editandoAluno = null; await gravar(E); render();
+    };
+    if ($('#c-cancelar')) $('#c-cancelar').onclick = () => { editandoAluno = null; render(); };
+    tela.querySelectorAll('[data-ed]').forEach(b => b.onclick = () => { editandoAluno = E.alunos.find(x => x.id === b.dataset.ed); render(); });
+    tela.querySelectorAll('[data-av]').forEach(b => b.onclick = () => { aba = 'avaliar'; avaliandoAluno = b.dataset.av; render(); });
+    tela.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
+      const al = E.alunos.find(x => x.id === b.dataset.rm);
+      if (!confirm('Remover ' + al.nome + ' e todas as notas dele?')) return;
+      E.alunos = E.alunos.filter(x => x.id !== al.id); delete E.notas[al.id];
+      await gravar(E); render();
+    });
+  }
+
+  function telaAvaliar(tela) {
+    if (!E.alunos.length) { tela.innerHTML = '<h2 class="titulo">Avaliar</h2><div class="vazio">Cadastre um competidor primeiro, na aba Competidores.</div>'; return; }
+
+    if (!avaliandoAluno) {
+      tela.innerHTML = `<h2 class="titulo">Quem você vai avaliar?</h2>
+        <p class="sub">Você preenche a sua ficha. As notas dos outros avaliadores não aparecem aqui — só no resultado.</p>
+        <table class="lista"><tr><th>Competidor</th><th>Sua ficha</th><th></th></tr>` +
+        E.alunos.map(al => {
+          const minha = (E.notas[al.id] || {})[euId];
+          const pt = pontosDe(minha);
+          return `<tr><td><b>${esc(al.nome)}</b><div style="font-size:12px;color:var(--suave)">${esc(al.servico || al.turma || '')}</div></td>
+            <td>${pt ? '<span class="tag ok">' + pt.total + ' pontos</span>' : '<span class="tag">em branco</span>'}</td>
+            <td><button class="btn mini" data-go="${al.id}">${pt ? 'Revisar' : 'Avaliar'}</button></td></tr>`;
+        }).join('') + '</table>';
+      tela.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { avaliandoAluno = b.dataset.go; rascunho = null; render(); });
+      return;
+    }
+
+    const al = E.alunos.find(x => x.id === avaliandoAluno);
+    if (!rascunho) rascunho = Object.assign({}, ((E.notas[al.id] || {})[euId]) || {});
+
+    let html = `<h2 class="titulo">${esc(al.nome)}</h2>
+      <p class="sub">${esc(al.servico || 'Serviço sem nome')}${al.tema ? ' — ' + esc(al.tema) : ''}
+      ${al.proto ? ' · <a href="' + esc(al.proto) + '" target="_blank" rel="noopener">abrir protótipo</a>' : ''}
+      ${al.arquivo ? ' · <a href="' + esc(al.arquivo) + '" target="_blank" rel="noopener">abrir arquivo</a>' : ''}</p>
+      <p class="escala-legenda"><b>0</b> não fez · <b>1</b> fez em parte, ou só em uma das versões · <b>2</b> fez, e funciona no computador e no celular</p>`;
+
+    for (const b of Object.keys(BLOCOS)) {
+      html += `<div class="bloco-tit"><h3>Bloco ${b} — ${BLOCOS[b].nome}</h3><em>até ${BLOCOS[b].max} pontos</em></div><div class="cartao">`;
+      for (const c of CRITERIOS.filter(x => x.bloco === b)) {
+        html += `<div class="criterio">
+          <div class="cod">${c.id}</div>
+          <div><h4>${esc(c.t)}</h4><p>${esc(c.d)}</p></div>
+          <div class="notas">${[0, 1, 2].map(n =>
+            `<button data-c="${c.id}" data-n="${n}" class="${rascunho[c.id] === n ? 'on' : ''}">${ROTULOS[n]}<b>${n}</b></button>`).join('')}</div>
+        </div>`;
+      }
+      html += '</div>';
+    }
+    html += `<div class="cartao"><label class="campo" style="margin:0"><span>Observações para o feedback (opcional)</span>
+      <textarea id="obs" rows="3" placeholder="O que ele fez bem e o que precisa melhorar">${esc(rascunho.__obs || '')}</textarea></label></div>
+      <div class="barra-total">
+        <div><div class="n" id="tot">0<small>/100</small></div></div>
+        <div class="info" id="info"></div>
+        <div class="acoes"><button class="btn sec" id="voltar">Voltar</button><button class="btn" id="salvar">Salvar ficha</button></div>
+      </div>`;
+    tela.innerHTML = html;
+
+    function atualiza() {
+      const pt = pontosDe(rascunho);
+      $('#tot').innerHTML = (pt ? pt.total : 0) + '<small>/100</small>';
+      const faltam = CRITERIOS.length - (pt ? pt.respondidos : 0);
+      $('#info').textContent = faltam ? faltam + ' critério(s) ainda sem nota' : 'Ficha completa';
+      $('#salvar').disabled = false;
+    }
+    tela.querySelectorAll('.notas button').forEach(b => b.onclick = () => {
+      rascunho[b.dataset.c] = Number(b.dataset.n);
+      b.parentNode.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on'); atualiza();
+    });
+    $('#voltar').onclick = () => { avaliandoAluno = null; rascunho = null; render(); };
+    $('#salvar').onclick = async () => {
+      rascunho.__obs = $('#obs').value;
+      const atual = await ler();
+      if (atual) { E = normaliza(atual); }
+      if (!E.notas[al.id]) E.notas[al.id] = {};
+      E.notas[al.id][euId] = Object.assign({}, rascunho);
+      await gravar(E);
+      avaliandoAluno = null; rascunho = null; aba = 'resultados'; render();
+    };
+    atualiza();
+  }
+
+  function telaResultados(tela) {
+    const ordenados = E.alunos.map(al => ({ al, r: resultado(al) }))
+      .sort((x, y) => (y.r.final === null ? -1 : y.r.final) - (x.r.final === null ? -1 : x.r.final));
+
+    const linhas = ordenados.map((o, i) => {
+      const { al, r } = o;
+      if (r.final === null) return `<tr><td>—</td><td><b>${esc(al.nome)}</b></td><td colspan="5" style="color:var(--suave)">sem avaliação</td></tr>`;
+      const [rot, cor] = faixa(r.final);
+      return `<tr>
+        <td><span class="medalha ${i < 3 ? 'p' + (i + 1) : ''}">${i + 1}</span></td>
+        <td><b>${esc(al.nome)}</b><div style="font-size:12px;color:var(--suave)">${esc(al.servico || al.turma || '')}</div></td>
+        <td><span class="pontos" style="color:${cor}">${r.final}</span></td>
+        <td style="color:${cor};font-size:13px">${rot}</td>
+        <td style="font-size:13px">A ${Math.round(r.blocos.A * 10) / 10} · B ${Math.round(r.blocos.B * 10) / 10} · C ${Math.round(r.blocos.C * 10) / 10}</td>
+        <td style="font-size:12px;color:var(--suave)">${r.avaliadores} de ${E.avaliadores.length}${al.atraso ? ' · −10' : ''}${al.template ? ' · penalizado' : ''}</td>
+      </tr>`;
+    }).join('');
+
+    const obs = E.alunos.map(al => {
+      const fichas = E.notas[al.id] || {};
+      const txt = Object.keys(fichas).map(k => {
+        const nome = (E.avaliadores.find(a => a.id === k) || {}).nome || '?';
+        const o = (fichas[k].__obs || '').trim();
+        return o ? '<li><b>' + esc(nome) + ':</b> ' + esc(o) + '</li>' : '';
+      }).join('');
+      return txt ? '<div style="margin-bottom:10px"><b>' + esc(al.nome) + '</b><ul style="margin:4px 0 0 18px;font-size:13px">' + txt + '</ul></div>' : '';
+    }).join('');
+
+    tela.innerHTML = `
+      <h2 class="titulo">Resultados</h2>
+      <p class="sub">A nota final é a média das fichas preenchidas. Com um avaliador só, a nota dele é a nota final.</p>
+      ${E.alunos.length ? '<table class="lista"><tr><th></th><th>Competidor</th><th>Nota</th><th>Faixa</th><th>Por bloco</th><th>Fichas</th></tr>' + linhas + '</table>'
+        : '<div class="vazio">Nada para mostrar ainda.</div>'}
+      ${obs ? '<div class="cartao" style="margin-top:16px"><h3 style="margin:0 0 10px;font-size:15px">Observações dos avaliadores</h3>' + obs + '</div>' : ''}
+      <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sec" id="exportar">Exportar dados</button>
+        <button class="btn sec" id="importar">Importar dados</button>
+        <button class="btn sec" id="imprimir">Imprimir</button>
+      </div>`;
+
+    $('#exportar').onclick = () => {
+      const blob = new Blob([JSON.stringify(E, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'prova-figma-resultados.json'; a.click();
+    };
+    $('#importar').onclick = () => {
+      const inp = document.createElement('input'); inp.type = 'file'; inp.accept = '.json';
+      inp.onchange = () => {
+        const f = inp.files[0]; if (!f) return;
+        const fr = new FileReader();
+        fr.onload = async () => {
+          try { E = normaliza(JSON.parse(fr.result)); await gravar(E); render(); }
+          catch (e) { alert('Não consegui ler esse arquivo. Ele precisa ser um JSON exportado por este sistema.'); }
+        };
+        fr.readAsText(f);
+      };
+      inp.click();
+    };
+    $('#imprimir').onclick = () => window.print();
+  }
+
+  function telaAjustes(tela) {
+    tela.innerHTML = `
+      <h2 class="titulo">Ajustes</h2>
+      <p class="sub">Até três avaliadores. Remover um avaliador apaga as fichas que ele preencheu.</p>
+      <div class="cartao">
+        <label class="campo"><span>Nome da prova</span><input id="a-titulo" value="${esc(E.titulo)}" /></label>
+        <table class="lista" style="margin-bottom:12px"><tr><th>Avaliador</th><th>Fichas preenchidas</th><th></th></tr>
+        ${E.avaliadores.map(a => {
+          const n = E.alunos.filter(al => (E.notas[al.id] || {})[a.id]).length;
+          return `<tr><td>${esc(a.nome)}${a.id === euId ? ' <span class="tag">você</span>' : ''}</td><td>${n}</td>
+            <td><button class="btn mini sec" data-rmav="${a.id}">Remover</button></td></tr>`;
+        }).join('')}</table>
+        ${E.avaliadores.length < 3 ? '<div class="linha-campos"><label class="campo"><span>Adicionar avaliador</span><input id="a-novo" placeholder="Nome" /></label></div><button class="btn sec" id="a-add">Adicionar</button>' : '<p style="font-size:13px;color:var(--suave)">Limite de 3 avaliadores atingido.</p>'}
+        <button class="btn" id="a-salvar" style="margin-left:8px">Salvar</button>
+      </div>
+      <div class="aviso">Recomeçar do zero apaga competidores, notas e avaliadores deste navegador. Exporte antes, se quiser guardar.</div>
+      <button class="btn sec" id="a-zerar">Recomeçar do zero</button>`;
+
+    $('#a-salvar').onclick = async () => { E.titulo = $('#a-titulo').value.trim() || E.titulo; await gravar(E); render(); };
+    if ($('#a-add')) $('#a-add').onclick = async () => {
+      const n = $('#a-novo').value.trim(); if (!n) return;
+      E.avaliadores.push({ id: novoId(), nome: n }); await gravar(E); render();
+    };
+    tela.querySelectorAll('[data-rmav]').forEach(b => b.onclick = async () => {
+      const id = b.dataset.rmav;
+      if (E.avaliadores.length === 1) { alert('Precisa existir pelo menos um avaliador.'); return; }
+      if (!confirm('Remover este avaliador e as fichas dele?')) return;
+      E.avaliadores = E.avaliadores.filter(a => a.id !== id);
+      Object.keys(E.notas).forEach(k => delete E.notas[k][id]);
+      if (euId === id) { euId = null; localStorage.removeItem(CHAVE + ':eu'); }
+      await gravar(E); render();
+    });
+    $('#a-zerar').onclick = async () => {
+      if (!confirm('Apagar tudo e recomeçar?')) return;
+      E = base(); euId = null; localStorage.removeItem(CHAVE + ':eu'); await gravar(E); render();
+    };
+  }
+
+  function base() { return { titulo: 'Prova de prototipação — Figma', avaliadores: [], alunos: [], notas: {} }; }
+  function normaliza(o) {
+    const b = base();
+    return {
+      titulo: o.titulo || b.titulo,
+      avaliadores: Array.isArray(o.avaliadores) ? o.avaliadores.slice(0, 3) : [],
+      alunos: Array.isArray(o.alunos) ? o.alunos : [],
+      notas: (o.notas && typeof o.notas === 'object') ? o.notas : {}
+    };
+  }
+
+  (async function iniciar() {
+    const salvo = await ler();
+    E = salvo ? normaliza(salvo) : base();
+    render();
+  })();
+})();
+</script>
+
+</body>
+</html>
