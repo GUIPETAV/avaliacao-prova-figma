@@ -4,11 +4,10 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Sistema de Avaliação — Prova de Figma | Competições Senac</title>
-<meta name="description" content="Sistema de avaliação da prova prática de prototipação no Figma das Competições Senac. Cadastro de competidores, ficha de 17 critérios e ranking com até 3 avaliadores." />
+<meta name="description" content="Sistema de avaliação da prova prática de prototipação no Figma das Competições Senac. Cadastro de competidores, ficha de 21 critérios com pitch e ranking com até 3 avaliadores." />
 <meta name="theme-color" content="#012762" />
 <style>
   html, body { margin: 0; padding: 0; background: #E9EDF6; }
-  body { padding: 0; }
   #app-root { border-radius: 0 !important; min-height: 100vh; }
   @media print { #app-root .abas, #app-root .topo, #app-root .rodape { display: none !important; } }
 </style>
@@ -130,31 +129,36 @@
 
 <script>
 (function () {
-  const CHAVE = 'prova-figma-senac-v1';
+  const CHAVE = 'prova-figma-senac-v2';
 
   const CRITERIOS = [
-    { id:'A1', bloco:'A', peso:3, t:'Mostra o que está acontecendo', d:'Botão muda no hover, seção atual marcada no menu, plano selecionado diferente dos outros.' },
-    { id:'A2', bloco:'A', peso:3, t:'Fala a língua do usuário', d:'Texto sem jargão, ícones conhecidos, preço em R$ com periodicidade.' },
-    { id:'A3', bloco:'A', peso:3, t:'Deixa voltar atrás', d:'Menu do celular fecha, dá para voltar ao topo, dá para trocar o plano.' },
-    { id:'A4', bloco:'A', peso:3, t:'Mantém o padrão', d:'Botão igual em toda a página, celular com as mesmas cores e fontes, capas no mesmo estilo.' },
-    { id:'A5', bloco:'A', peso:3, t:'Evita erro do usuário', d:'Botão diz o que acontece, campo mostra o formato, plano recomendado em destaque.' },
-    { id:'A6', bloco:'A', peso:3, t:'Não exige decorar', d:'Menu sempre visível, botão com texto e não só ícone, seções com título.' },
-    { id:'A7', bloco:'A', peso:3, t:'Tem caminho curto', d:'Mais de um caminho até os planos, links do menu funcionam, botão logo no começo.' },
-    { id:'A8', bloco:'A', peso:3, t:'É limpa e organizada', d:'Uma ideia por seção, hierarquia clara, nada decorativo competindo com o botão.' },
-    { id:'A9', bloco:'A', peso:3, t:'Explica o erro', d:'Mensagem diz o problema e a solução, fica perto do campo. Sem estado de erro, nota máxima 1.' },
-    { id:'A10', bloco:'A', peso:3, t:'Oferece ajuda', d:'FAQ ou "como funciona", rodapé com contato, diferença entre os planos explicada.' },
-    { id:'B1', bloco:'B', peso:3, t:'Componentes', d:'1 = botão ou card como componente. 2 = os dois e reaproveitados no celular.' },
-    { id:'B2', bloco:'B', peso:3, t:'Estilos e logo', d:'2 = estilos de cor e texto aplicados, logo bem posicionada no topo e no rodapé.' },
-    { id:'B3', bloco:'B', peso:3, t:'Auto Layout', d:'2 = seções e cards com Auto Layout, celular derivado sem refazer tudo.' },
-    { id:'B4', bloco:'B', peso:3.5, t:'Protótipo funcionando', d:'Menu, botões e menu do celular ligados. 2 = as três ligações funcionam.' },
-    { id:'C1', bloco:'C', peso:3, t:'5 seções no computador', d:'0 = faltam 3 ou mais. 1 = falta 1 ou 2. 2 = todas com conteúdo de verdade.' },
-    { id:'C2', bloco:'C', peso:3, t:'5 seções no celular', d:'1 = fez, mas incompleto ou só redimensionado. 2 = adaptadas de verdade.' },
-    { id:'C3', bloco:'C', peso:1.5, t:'Prazo e organização', d:'2 = no prazo, links liberados, camadas e páginas nomeadas.' }
+    { id:'A1', bloco:'A', peso:2.5, t:'Mostra o que está acontecendo', d:'Botão muda no hover, seção atual marcada no menu, plano selecionado diferente dos outros.' },
+    { id:'A2', bloco:'A', peso:2.5, t:'Fala a língua do usuário', d:'Texto sem jargão, ícones conhecidos, preço em R$ com periodicidade.' },
+    { id:'A3', bloco:'A', peso:2.5, t:'Deixa voltar atrás', d:'Menu do celular fecha, dá para voltar ao topo, dá para trocar o plano.' },
+    { id:'A4', bloco:'A', peso:2.5, t:'Mantém o padrão', d:'Botão igual em toda a página, celular com as mesmas cores e fontes, capas no mesmo estilo.' },
+    { id:'A5', bloco:'A', peso:2.5, t:'Evita erro do usuário', d:'Botão diz o que acontece, campo mostra o formato, plano recomendado em destaque.' },
+    { id:'A6', bloco:'A', peso:2.5, t:'Não exige decorar', d:'Menu sempre visível, botão com texto e não só ícone, seções com título.' },
+    { id:'A7', bloco:'A', peso:2.5, t:'Tem caminho curto', d:'Mais de um caminho até os planos, links do menu funcionam, botão logo no começo.' },
+    { id:'A8', bloco:'A', peso:2.5, t:'É limpa e organizada', d:'Uma ideia por seção, hierarquia clara, nada decorativo competindo com o botão.' },
+    { id:'A9', bloco:'A', peso:2.5, t:'Explica o erro', d:'Mensagem diz o problema e a solução, fica perto do campo. Sem estado de erro, nota máxima 1.' },
+    { id:'A10', bloco:'A', peso:2.5, t:'Oferece ajuda', d:'FAQ ou "como funciona", rodapé com contato, diferença entre os planos explicada.' },
+    { id:'B1', bloco:'B', peso:2.5, t:'Componentes', d:'1 = botão ou card como componente. 2 = os dois e reaproveitados no celular.' },
+    { id:'B2', bloco:'B', peso:2.5, t:'Estilos e logo', d:'2 = estilos de cor e texto aplicados, logo bem posicionada no topo e no rodapé.' },
+    { id:'B3', bloco:'B', peso:2.5, t:'Auto Layout', d:'2 = seções e cards com Auto Layout, celular derivado sem refazer tudo.' },
+    { id:'B4', bloco:'B', peso:2.5, t:'Protótipo funcionando', d:'Menu, botões e menu do celular ligados. 2 = as três ligações funcionam.' },
+    { id:'C1', bloco:'C', peso:2, t:'5 seções no computador', d:'0 = faltam 3 ou mais. 1 = falta 1 ou 2. 2 = todas com conteúdo de verdade.' },
+    { id:'C2', bloco:'C', peso:2, t:'5 seções no celular', d:'1 = fez, mas incompleto ou só redimensionado. 2 = adaptadas de verdade.' },
+    { id:'C3', bloco:'C', peso:1, t:'Prazo e organização', d:'2 = no prazo, links liberados, camadas e páginas nomeadas.' },
+    { id:'D1', bloco:'D', peso:2.5, t:'Apresentou o serviço', d:'2 = nome, público e proposta de valor claros nos primeiros minutos.' },
+    { id:'D2', bloco:'D', peso:2.5, t:'Demonstrou o protótipo', d:'2 = navegou as duas versões mostrando o fluxo até os planos. Descrever sem navegar é 0.' },
+    { id:'D3', bloco:'D', peso:2.5, t:'Justificou as decisões', d:'2 = ligou pelo menos duas escolhas a itens do checklist de usabilidade. "Achei bonito" é 1.' },
+    { id:'D4', bloco:'D', peso:2.5, t:'Clareza e tempo', d:'2 = fala clara, dentro dos 10 minutos, respondeu às perguntas. Estourou o tempo é 0.' }
   ];
   const BLOCOS = {
-    A: { nome: 'Usabilidade — heurísticas de Nielsen', max: 60 },
-    B: { nome: 'Uso do Figma', max: 25 },
-    C: { nome: 'Entrega', max: 15 }
+    A: { nome: 'Usabilidade — heurísticas de Nielsen', max: 50 },
+    B: { nome: 'Uso do Figma', max: 20 },
+    C: { nome: 'Entrega', max: 10 },
+    D: { nome: 'Pitch de até 10 minutos', max: 20 }
   };
   const ROTULOS = ['Não fez', 'Em parte', 'Fez'];
 
@@ -383,7 +387,8 @@
       <p class="sub">${esc(al.servico || 'Serviço sem nome')}${al.tema ? ' — ' + esc(al.tema) : ''}
       ${al.proto ? ' · <a href="' + esc(al.proto) + '" target="_blank" rel="noopener">abrir protótipo</a>' : ''}
       ${al.arquivo ? ' · <a href="' + esc(al.arquivo) + '" target="_blank" rel="noopener">abrir arquivo</a>' : ''}</p>
-      <p class="escala-legenda"><b>0</b> não fez · <b>1</b> fez em parte, ou só em uma das versões · <b>2</b> fez, e funciona no computador e no celular</p>`;
+      <p class="escala-legenda"><b>0</b> não fez · <b>1</b> fez em parte, ou só em uma das versões · <b>2</b> fez, e funciona no computador e no celular.
+      O bloco D é preenchido durante o pitch, com o cronômetro à vista.</p>`;
 
     for (const b of Object.keys(BLOCOS)) {
       html += `<div class="bloco-tit"><h3>Bloco ${b} — ${BLOCOS[b].nome}</h3><em>até ${BLOCOS[b].max} pontos</em></div><div class="cartao">`;
@@ -444,7 +449,7 @@
         <td><b>${esc(al.nome)}</b><div style="font-size:12px;color:var(--suave)">${esc(al.servico || al.turma || '')}</div></td>
         <td><span class="pontos" style="color:${cor}">${r.final}</span></td>
         <td style="color:${cor};font-size:13px">${rot}</td>
-        <td style="font-size:13px">A ${Math.round(r.blocos.A * 10) / 10} · B ${Math.round(r.blocos.B * 10) / 10} · C ${Math.round(r.blocos.C * 10) / 10}</td>
+        <td style="font-size:13px">A ${Math.round(r.blocos.A * 10) / 10} · B ${Math.round(r.blocos.B * 10) / 10} · C ${Math.round(r.blocos.C * 10) / 10} · D ${Math.round(r.blocos.D * 10) / 10}</td>
         <td style="font-size:12px;color:var(--suave)">${r.avaliadores} de ${E.avaliadores.length}${al.atraso ? ' · −10' : ''}${al.template ? ' · penalizado' : ''}</td>
       </tr>`;
     }).join('');
