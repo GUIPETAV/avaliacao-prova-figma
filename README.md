@@ -13,6 +13,7 @@ Ferramenta de avaliação da prova prática de prototipação no Figma das **Com
 - Penalidades por atraso na entrega e por uso de template
 - Ranking com nota por bloco e observações de cada avaliador
 - Exportar e importar os dados em JSON
+- **Planilha do Google como banco compartilhado** — os três avaliadores veem a mesma base (veja `COMO-CONECTAR.md`)
 
 ## Como a nota é composta
 
@@ -25,7 +26,17 @@ Ferramenta de avaliação da prova prática de prototipação no Figma das **Com
 
 ## Como usar
 
-Abra o site, cadastre os avaliadores na primeira tela e escolha quem está usando o computador. Os dados ficam salvos no navegador. Para levar de um computador a outro, use **Exportar dados** e depois **Importar dados**.
+Abra o site, cadastre os avaliadores na primeira tela e escolha quem está usando o computador.
+
+Para que os três avaliadores compartilhem a mesma base, conecte uma planilha do Google seguindo o guia [COMO-CONECTAR.md](COMO-CONECTAR.md). Sem planilha, cada navegador guarda os próprios dados e a consolidação é feita com **Exportar dados** e **Importar dados**.
+
+## Arquivos
+
+| Arquivo | O que é |
+|---|---|
+| `index.html` | O sistema inteiro, em um arquivo só |
+| `apps-script.gs` | Script que transforma uma planilha do Google em banco de dados |
+| `COMO-CONECTAR.md` | Passo a passo da configuração da planilha |
 
 ## Licença
 

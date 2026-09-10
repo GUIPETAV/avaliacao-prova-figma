@@ -44,6 +44,9 @@
   .topo .quem b { color: #fff; }
   .btn-troca { background: transparent; border: 1px solid #47598F; color: #D4DEF5; padding: 5px 11px; border-radius: 6px; font-size: 12px; }
   .btn-troca:hover { background: #10306E; }
+  .selo { display: inline-block; font-size: 11px; padding: 3px 9px; border-radius: 20px; background: #10306E; color: #B9C6E8; }
+  .selo.ok { background: #2E4A18; color: #D6EFA8; }
+  .selo.erro { background: #5A1026; color: #FFC2D3; }
 
   .abas { display: flex; gap: 2px; background: var(--azul-escuro); padding: 0 16px; }
   .abas button { background: transparent; border: 0; border-bottom: 3px solid transparent; color: #A9BADF; padding: 11px 16px; font-size: 14px; }
@@ -124,7 +127,7 @@
 </div>
 <div class="abas" id="abas"></div>
 <div id="tela" class="tela"></div>
-<div class="rodape">Os dados ficam salvos neste navegador. Use <b>Exportar</b> em Resultados para guardar uma cópia.</div>
+<div class="rodape">Sem planilha conectada, os dados ficam só neste navegador. Conecte uma planilha em <b>Ajustes</b> para os três avaliadores compartilharem a mesma base.</div>
 </div>
 
 <script>
@@ -164,22 +167,64 @@
 
   /* ---------- armazenamento ---------- */
   const local = {
-    async get(k) { const v = localStorage.getItem(CHAVE + ':' + k); return v ? { value: v } : null; },
-    async set(k, v) { localStorage.setItem(CHAVE + ':' + k, v); return true; }
+    get(k) { const v = localStorage.getItem(CHAVE + ':' + k); return v ? { value: v } : null; },
+    set(k, v) { localStorage.setItem(CHAVE + ':' + k, v); }
   };
   const remoto = (typeof window !== 'undefined' && window.storage) ? window.storage : null;
+
+  let NUVEM = localStorage.getItem(CHAVE + ':nuvem') || '';
+  let estadoNuvem = { situacao: NUVEM ? 'pendente' : 'off', quando: null, erro: '' };
 
   async function ler() {
     if (remoto) {
       try { const r = await remoto.get(CHAVE, true); if (r && r.value) return JSON.parse(r.value); } catch (e) {}
     }
-    try { const r = await local.get('estado'); if (r) return JSON.parse(r.value); } catch (e) {}
+    try { const r = local.get('estado'); if (r) return JSON.parse(r.value); } catch (e) {}
     return null;
   }
   async function gravar(obj) {
     const txt = JSON.stringify(obj);
-    await local.set('estado', txt);
+    local.set('estado', txt);
     if (remoto) { try { await remoto.set(CHAVE, txt, true); } catch (e) {} }
+    if (NUVEM) await enviarNuvem(obj);
+  }
+
+  async function chamarNuvem(metodo, corpo) {
+    const opcoes = metodo === 'POST'
+      ? { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(corpo), redirect: 'follow' }
+      : { method: 'GET', redirect: 'follow' };
+    const resp = await fetch(NUVEM, opcoes);
+    const dados = await resp.json();
+    if (!dados.ok) throw new Error(dados.erro || 'resposta inválida da planilha');
+    return dados.estado;
+  }
+
+  async function enviarNuvem(obj) {
+    try {
+      const fundido = await chamarNuvem('POST', obj);
+      E = normaliza(fundido);
+      local.set('estado', JSON.stringify(E));
+      estadoNuvem = { situacao: 'ok', quando: new Date(), erro: '' };
+    } catch (e) {
+      estadoNuvem = { situacao: 'erro', quando: estadoNuvem.quando, erro: e.message };
+    }
+  }
+
+  async function puxarNuvem() {
+    if (!NUVEM) return;
+    try {
+      const remotoEstado = await chamarNuvem('GET');
+      E = normaliza(remotoEstado);
+      local.set('estado', JSON.stringify(E));
+      estadoNuvem = { situacao: 'ok', quando: new Date(), erro: '' };
+    } catch (e) {
+      estadoNuvem = { situacao: 'erro', quando: null, erro: e.message };
+    }
+  }
+
+  function marcarRemovido(tipo, id) {
+    if (!E.removidos) E.removidos = { alunos: [], avaliadores: [] };
+    if (!E.removidos[tipo].includes(id)) E.removidos[tipo].push(id);
   }
 
   /* ---------- estado ---------- */
@@ -247,8 +292,9 @@
     if (!eu()) { abas.style.display = 'none'; quem.innerHTML = ''; return telaQuemSouEu(tela); }
 
     abas.style.display = 'flex';
-    quem.innerHTML = 'Avaliando como <b>' + esc(eu().nome) + '</b> <button class="btn-troca" id="trocar">Trocar</button>';
+    quem.innerHTML = selo() + ' Avaliando como <b>' + esc(eu().nome) + '</b> <button class="btn-troca" id="trocar">Trocar</button>';
     $('#trocar').onclick = () => { localStorage.removeItem(CHAVE + ':eu'); euId = null; render(); };
+    if ($('#sincronizar')) $('#sincronizar').onclick = async () => { await puxarNuvem(); render(); };
 
     const itens = [['competidores', 'Competidores'], ['avaliar', 'Avaliar'], ['resultados', 'Resultados'], ['ajustes', 'Ajustes']];
     abas.innerHTML = itens.map(([k, n]) => '<button data-aba="' + k + '" class="' + (aba === k ? 'on' : '') + '">' + n + '</button>').join('');
@@ -258,6 +304,13 @@
     else if (aba === 'avaliar') telaAvaliar(tela);
     else if (aba === 'resultados') telaResultados(tela);
     else telaAjustes(tela);
+  }
+
+  function selo() {
+    if (!NUVEM) return '<span class="selo off">só neste navegador</span>';
+    if (estadoNuvem.situacao === 'erro') return '<span class="selo erro" title="' + esc(estadoNuvem.erro) + '">sem conexão com a planilha</span> <button class="btn-troca" id="sincronizar">Tentar de novo</button>';
+    const h = estadoNuvem.quando ? estadoNuvem.quando.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—';
+    return '<span class="selo ok">planilha · ' + h + '</span> <button class="btn-troca" id="sincronizar">Sincronizar</button>';
   }
 
   function telaSetup(tela) {
@@ -357,7 +410,7 @@
     tela.querySelectorAll('[data-rm]').forEach(b => b.onclick = async () => {
       const al = E.alunos.find(x => x.id === b.dataset.rm);
       if (!confirm('Remover ' + al.nome + ' e todas as notas dele?')) return;
-      E.alunos = E.alunos.filter(x => x.id !== al.id); delete E.notas[al.id];
+      E.alunos = E.alunos.filter(x => x.id !== al.id); delete E.notas[al.id]; marcarRemovido('alunos', al.id);
       await gravar(E); render();
     });
   }
@@ -502,6 +555,15 @@
       <h2 class="titulo">Ajustes</h2>
       <p class="sub">Até três avaliadores. Remover um avaliador apaga as fichas que ele preencheu.</p>
       <div class="cartao">
+        <h3 style="margin:0 0 4px;font-size:15px">Planilha compartilhada</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--suave)">Cole aqui o endereço do aplicativo da web gerado pelo Google Apps Script. Com ele, os três avaliadores enxergam os mesmos dados. Sem ele, cada navegador guarda os seus.</p>
+        <label class="campo"><span>Endereço do aplicativo da web</span><input id="a-nuvem" value="${esc(NUVEM)}" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+        <button class="btn sec" id="a-conectar">${NUVEM ? 'Salvar e sincronizar' : 'Conectar'}</button>
+        ${NUVEM ? '<button class="btn sec" id="a-desconectar" style="margin-left:8px">Desconectar</button>' : ''}
+        ${estadoNuvem.situacao === 'erro' ? '<p style="margin:10px 0 0;font-size:13px;color:#B00030">Não consegui falar com a planilha: ' + esc(estadoNuvem.erro) + '</p>' : ''}
+      </div>
+
+      <div class="cartao">
         <label class="campo"><span>Nome da prova</span><input id="a-titulo" value="${esc(E.titulo)}" /></label>
         <table class="lista" style="margin-bottom:12px"><tr><th>Avaliador</th><th>Fichas preenchidas</th><th></th></tr>
         ${E.avaliadores.map(a => {
@@ -515,6 +577,23 @@
       <div class="aviso">Recomeçar do zero apaga competidores, notas e avaliadores deste navegador. Exporte antes, se quiser guardar.</div>
       <button class="btn sec" id="a-zerar">Recomeçar do zero</button>`;
 
+    $('#a-conectar').onclick = async () => {
+      const url = $('#a-nuvem').value.trim();
+      if (url && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(url)) {
+        alert('O endereço precisa terminar em /exec e começar com https://script.google.com/macros/s/');
+        return;
+      }
+      NUVEM = url;
+      if (url) localStorage.setItem(CHAVE + ':nuvem', url); else localStorage.removeItem(CHAVE + ':nuvem');
+      estadoNuvem = { situacao: url ? 'pendente' : 'off', quando: null, erro: '' };
+      if (url) { await puxarNuvem(); await gravar(E); }
+      render();
+    };
+    if ($('#a-desconectar')) $('#a-desconectar').onclick = () => {
+      NUVEM = ''; localStorage.removeItem(CHAVE + ':nuvem');
+      estadoNuvem = { situacao: 'off', quando: null, erro: '' };
+      render();
+    };
     $('#a-salvar').onclick = async () => { E.titulo = $('#a-titulo').value.trim() || E.titulo; await gravar(E); render(); };
     if ($('#a-add')) $('#a-add').onclick = async () => {
       const n = $('#a-novo').value.trim(); if (!n) return;
@@ -524,7 +603,7 @@
       const id = b.dataset.rmav;
       if (E.avaliadores.length === 1) { alert('Precisa existir pelo menos um avaliador.'); return; }
       if (!confirm('Remover este avaliador e as fichas dele?')) return;
-      E.avaliadores = E.avaliadores.filter(a => a.id !== id);
+      E.avaliadores = E.avaliadores.filter(a => a.id !== id); marcarRemovido('avaliadores', id);
       Object.keys(E.notas).forEach(k => delete E.notas[k][id]);
       if (euId === id) { euId = null; localStorage.removeItem(CHAVE + ':eu'); }
       await gravar(E); render();
@@ -535,14 +614,18 @@
     };
   }
 
-  function base() { return { titulo: 'Prova de prototipação — Figma', avaliadores: [], alunos: [], notas: {} }; }
+  function base() { return { titulo: 'Prova de prototipação — Figma', avaliadores: [], alunos: [], notas: {}, removidos: { alunos: [], avaliadores: [] } }; }
   function normaliza(o) {
     const b = base();
     return {
       titulo: o.titulo || b.titulo,
       avaliadores: Array.isArray(o.avaliadores) ? o.avaliadores.slice(0, 3) : [],
       alunos: Array.isArray(o.alunos) ? o.alunos : [],
-      notas: (o.notas && typeof o.notas === 'object') ? o.notas : {}
+      notas: (o.notas && typeof o.notas === 'object') ? o.notas : {},
+      removidos: {
+        alunos: (o.removidos && Array.isArray(o.removidos.alunos)) ? o.removidos.alunos : [],
+        avaliadores: (o.removidos && Array.isArray(o.removidos.avaliadores)) ? o.removidos.avaliadores : []
+      }
     };
   }
 
@@ -550,6 +633,7 @@
     const salvo = await ler();
     E = salvo ? normaliza(salvo) : base();
     render();
+    if (NUVEM) { await puxarNuvem(); render(); }
   })();
 })();
 </script>
