@@ -318,7 +318,16 @@
       <h2 class="titulo">Vamos começar</h2>
       <p class="sub">Cadastre de 1 a 3 avaliadores. A nota final de cada competidor é a média de quem avaliar — funciona com um avaliador só.</p>
       <div class="cartao">
-        <label class="campo"><span>Nome da prova</span><input id="s-titulo" value="Prova de prototipação — Figma" /></label>
+        <h3 style="margin:0 0 4px;font-size:15px">Já existe uma planilha para esta prova?</h3>
+        <p style="margin:0 0 10px;font-size:13px;color:var(--suave)">Se outro avaliador já configurou a planilha compartilhada, cole o endereço aqui e os dados aparecem prontos. Se você é quem está começando, pule este quadro.</p>
+        <label class="campo"><span>Endereço do aplicativo da web (opcional)</span><input id="s-nuvem" value="${esc(NUVEM)}" placeholder="https://script.google.com/macros/s/.../exec" /></label>
+        <button class="btn sec" id="s-conectar">Conectar planilha</button>
+        ${estadoNuvem.situacao === 'erro' ? '<p style="margin:10px 0 0;font-size:13px;color:#B00030">Não consegui falar com a planilha: ' + esc(estadoNuvem.erro) + '</p>' : ''}
+        ${NUVEM && estadoNuvem.situacao === 'ok' ? '<p style="margin:10px 0 0;font-size:13px;color:#4E6100">Planilha conectada. Se ela ainda não tem avaliadores, cadastre-os abaixo.</p>' : ''}
+      </div>
+
+      <div class="cartao">
+        <label class="campo"><span>Nome da prova</span><input id="s-titulo" value="${esc(E.titulo)}" /></label>
         <div class="linha-campos">
           <label class="campo"><span>Avaliador 1 (obrigatório)</span><input id="s-a1" placeholder="Ex.: Guilherme Tavares" /></label>
           <label class="campo"><span>Avaliador 2 (opcional)</span><input id="s-a2" placeholder="Deixe vazio se não houver" /></label>
@@ -326,6 +335,18 @@
         </div>
         <button class="btn" id="s-ok">Criar a prova</button>
       </div>`;
+    $('#s-conectar').onclick = async () => {
+      const url = $('#s-nuvem').value.trim();
+      if (url && !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec/.test(url)) {
+        alert('O endereço precisa terminar em /exec e começar com https://script.google.com/macros/s/');
+        return;
+      }
+      NUVEM = url;
+      if (url) localStorage.setItem(CHAVE + ':nuvem', url); else localStorage.removeItem(CHAVE + ':nuvem');
+      estadoNuvem = { situacao: url ? 'pendente' : 'off', quando: null, erro: '' };
+      if (url) await puxarNuvem();
+      render();
+    };
     $('#s-ok').onclick = async () => {
       const nomes = ['s-a1', 's-a2', 's-a3'].map(i => $('#' + i).value.trim()).filter(Boolean);
       if (!nomes.length) { $('#s-a1').focus(); return; }
